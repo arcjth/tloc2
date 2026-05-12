@@ -19,8 +19,6 @@
 // capture_buffer
 typedef struct {
     int32_t  samples[I2S_MAX_SAMPLES][I2S_CHANNELS];
-    uint16_t num_samples;
-    uint16_t fs;
 } i2sBuffer;
 
 uint32_t tdoa[4] = {0};
@@ -68,63 +66,52 @@ void i2s_init(void) {
     Serial.println("interface I2S incializada (24-bit, 4 canais)");
 }
 
-bool i2s_capture(i2sBuffer *buf) {
-    if (!buf) return false;
-    buf->fs       = 1562;
+void i2s_capture(i2sBuffer *buf) {
+  for (uint16_t s = 0; s < I2S_MAX_SAMPLES; s++) {
+    int32_t raw[I2S_CHANNELS] = {0, 0, 0, 0};
+    // ciclo 0: borda WS — MSB atrasado em 1 SCK (do datasheet)
+    _ws_low();
+    _sck_high();
+    _ns_delay();
+    _sck_low();
 
-    for (uint16_t s = 0; s < buf->num_samples; s++) {
-
-        int32_t raw[I2S_CHANNELS] = {0, 0, 0, 0};
-
-        // ciclo 0: borda WS — MSB atrasado em 1 SCK (do datasheet)
-        _ws_low();
+    // ciclos 1..24: bits, suco da leitura
+    for (int bit = I2S_BITS_PER_CH - 1; bit >= 0; bit--) {
+        uint8_t sd[I2S_CHANNELS];
+        _sck_high();
+        _ns_delay();
+        _read_sd(sd);
+        _sck_low();
+        for (int ch = 0; ch < I2S_CHANNELS; ch++) if (sd[ch]) raw[ch] |= (1L << bit); // inserção sequencial de bits
+    }
+    _ns_delay();
+    // ciclos 25..31: padding (sem dados, joga ciclos fora)
+    for (int p = 0; p < (32 - 1 - I2S_BITS_PER_CH); p++) {
         _sck_high();
         _ns_delay();
         _sck_low();
-
-        // ciclos 1..24: bits, suco da leitura
-        for (int bit = I2S_BITS_PER_CH - 1; bit >= 0; bit--) {
-            uint8_t sd[I2S_CHANNELS];
-            _sck_high();
-            _ns_delay();
-            _read_sd(sd);
-            _sck_low();
-            for (int ch = 0; ch < I2S_CHANNELS; ch++)
-                if (sd[ch]) raw[ch] |= (1L << bit); // coloca bits na posição certa sequencialmente
-        }  _ns_delay();
-
-            // ciclos 25..31: padding (sem dados, joga ciclos fora)
-            for (int p = 0; p < (32 - 1 - I2S_BITS_PER_CH); p++) {
-                _sck_high();
-                _ns_delay();
-                _sck_low();
-                _ns_delay();
-            }
-
-            // canal RIGHT, completamente descartado (por enquanto)
-            _ws_high();
-            for (int p = 0; p < 32; p++) {
-                _sck_high();
-                _ns_delay();
-                _sck_low();
-                _ns_delay();
-            }
-
-            // extensão de sinal 24-bit → 32-bit e armazena
-            for (int ch = 0; ch < I2S_CHANNELS; ch++)
-                buf->samples[s][ch] = i2s_convert_24bit_signed(raw[ch]);
-                if (buf->samples[s][ch] > SND_THRES_AMP) {
-
-                }
+        _ns_delay();
     }
-    return true;
+
+    // canal RIGHT, completamente descartado (por enquanto)
+    _ws_high();
+    for (int p = 0; p < 32; p++) {
+        _sck_high();
+        _ns_delay();
+        _sck_low();
+        _ns_delay();
+    }
+    // extensão de sinal 24-bit → 32-bit e armazena
+    for (int ch = 0; ch < I2S_CHANNELS; ch++)
+        buf->samples[s][ch] = i2s_convert_24bit_signed(raw[ch]);
+    }
 }
 
 static i2sBuffer buf;
 
 void basicDebug(i2sBuffer *buf, long *processTime) {
     // Imprime todos os samples no formato:  s0_ch0,s0_ch1,s0_ch2,s0_ch3
-    for (uint16_t s = 0; s < buf.num_samples; s++) {
+    for (uint16_t s = 0; s < I2S_MAX_SAMPLES; s++) {
         Serial.print("-50000, ", );
         Serial.print("50000, ", );
         for (int ch = 0; ch < I2S_CHANNELS; ch++) {
@@ -141,7 +128,6 @@ void setup() {
     delay(1000);
     Serial.println("=== TESTE I2S BIT-BANG || 4x INMP441 ===");
     i2s_init();
-    buf.num_samples = I2S_MAX_SAMPLES;
 }
 
 void loop() {
