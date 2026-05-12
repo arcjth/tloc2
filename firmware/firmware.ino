@@ -14,7 +14,7 @@
 #define I2S_PERIOD_COUNT 1    // 1 ciclo por unidade
 #define I2S_MAX_SAMPLES 64 // para caber na SRAM do Nano (2KB), não lembro qual foi a nossa dedução.
 
-#define SND_THRES_AMP 5000
+#define SND_THRES_AMP 50000
 
 // capture_buffer
 typedef struct {
@@ -22,6 +22,8 @@ typedef struct {
     uint16_t num_samples;
     uint16_t fs;
 } i2sBuffer;
+
+uint32_t tdoa[4] = {0};
 
 static inline void _sck_high(void) { PORTD |= (1 << I2S_SCK); }
 static inline void _sck_low(void)  { PORTD &= ~(1 << I2S_SCK);  }
@@ -46,6 +48,14 @@ static inline int32_t i2s_convert_24bit_signed(int32_t raw) {
     return raw & 0x00FFFFFF;        // mascara 24 bits
 }
 
+void listen2tdoa(int ch_i, uint32_t initialSample) {
+    tdoa[ch_i] = 0;
+    // calcular a diferenca de tempo de cada um usando diferenças de millis conforme cada um bate o threshold,
+    // provavelmente atraves de uma alimentacao de diferentes variaveis com a chamada repitida dessa função. pensar
+    // melhor nisso com o pessoal. idealmente, o vetor final de diferenças teria o primeiro a ativar como referencia zero,
+    // mas talvez isso seja descartado caso complique muito a arquitetura ou a quantidade de variaveis.
+}
+
 // I2S bit-bang — inicialização
 void i2s_init(void) {
     // pinos 2 e 3 como output, não precisa manipular os do 4 a 7
@@ -55,11 +65,6 @@ void i2s_init(void) {
     // inicializa SCK e WS em zero:
     PORTD &= ~(1 << I2S_SCK);
     PORTD &= ~(1 << I2S_WS);
-    // totalmente desnecessario na teoria mas por paranoia:
-    DDRD &= ~(1 << I2S_SD0);
-    DDRD &= ~(1 << I2S_SD1);
-    DDRD &= ~(1 << I2S_SD2);
-    DDRD &= ~(1 << I2S_SD3);
     Serial.println("interface I2S incializada (24-bit, 4 canais)");
 }
 
@@ -108,12 +113,28 @@ bool i2s_capture(i2sBuffer *buf) {
             // extensão de sinal 24-bit → 32-bit e armazena
             for (int ch = 0; ch < I2S_CHANNELS; ch++)
                 buf->samples[s][ch] = i2s_convert_24bit_signed(raw[ch]);
-                if ()
+                if (buf->samples[s][ch] > SND_THRES_AMP) {
+
+                }
     }
     return true;
 }
 
 static i2sBuffer buf;
+
+void basicDebug(i2sBuffer *buf, long *processTime) {
+    // Imprime todos os samples no formato:  s0_ch0,s0_ch1,s0_ch2,s0_ch3
+    for (uint16_t s = 0; s < buf.num_samples; s++) {
+        Serial.print("-50000, ", );
+        Serial.print("50000, ", );
+        for (int ch = 0; ch < I2S_CHANNELS; ch++) {
+            Serial.print(buf->samples[s][ch]);
+            if (ch < I2S_CHANNELS - 1) Serial.print(",");
+        }
+        Serial.print("tempo de processamento da última leitura: ");
+        Serial.println(processTime);
+    }
+}
 
 void setup() {
     Serial.begin(115200);
@@ -126,14 +147,6 @@ void setup() {
 void loop() {
     long t = millis();
     i2s_capture(&buf);
-    // Imprime todos os samples no formato:  s0_ch0,s0_ch1,s0_ch2,s0_ch3
-    for (uint16_t s = 0; s < buf.num_samples; s++) {
-        Serial.print("-10000000, ");
-        Serial.print("10000000, ");
-        for (int ch = 0; ch < I2S_CHANNELS; ch++) {
-            Serial.print(buf.samples[s][ch]);
-            if (ch < I2S_CHANNELS - 1) Serial.print(",");
-        }
-        Serial.println();
-    }
+    long processTime = millis() - t;
+    // basicDebug(&buf, &processTime);
 }
