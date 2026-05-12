@@ -1,7 +1,7 @@
 #!/bin/bash
-SKETCH="main/main.ino"
+SKETCH="firmware.ino"
 BOARD="arduino:avr:nano:cpu=atmega328old"
-PORT="/dev/ttyUSB1"
+PORT="/dev/ttyUSB0"
 
 arduino-cli compile --fqbn $BOARD $SKETCH
 arduino-cli upload  --fqbn $BOARD --port $PORT $SKETCH
