@@ -1,6 +1,6 @@
 #!/bin/bash
 SKETCH="firmware.ino"
-BOARD="arduino:avr:nano:cpu=atmega328"
+BOARD="esp32:esp32:esp32"
 PORT="/dev/ttyUSB0"
 
 arduino-cli compile --fqbn $BOARD $SKETCH && \

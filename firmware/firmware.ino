@@ -14,8 +14,8 @@
 #define I2S_BITS_PER_CH 24
 #define I2S_MAX_LAG 4   
 #define I2S_MAX_SAMPLES 64
-// quantas vezes dividir por dois no xcrr, que é necessário pra que não haja overflow da var de 32-bits
-// existe um sweet-spot baseado nos valores maximos que os mics enviam, baseado no volume do som que se espera.
+// quantas vezes dividir por dois no xcrr, que é necessário pra que não haja overflow de 32-bits.
+// existe um sweet-spot baseado nos valores maximos que os mics enviam, que parece ser de 10 bits.
 #define I2S_OVERFLOW_BIT_MARGIN 10
 
 #define SND_SPEED 343.0f
@@ -27,10 +27,24 @@
 
 // capture_buffer
 typedef struct {
-    int32_t  samples[I2S_MAX_SAMPLES][I2S_CHANNELS];
+    int32_t samples[I2S_MAX_SAMPLES][I2S_CHANNELS];
     float ema[I2S_CHANNELS];
     float r_unit[I2S_NOREF_CHANNELS];
 } i2sBuffer;
+
+// quando detecta um evento sonoro
+#define BIT_EVENT_EMA b0
+
+typedef struct {
+    uint8_t b0 : 1;
+    uint8_t b1 : 1;
+    uint8_t b2 : 1;
+    uint8_t b3 : 1;
+    uint8_t b4 : 1;
+    uint8_t b5 : 1;
+    uint8_t b6 : 1;
+    uint8_t b7 : 1;
+} byteMask;
 
 static inline void _sck_high(void) { PORTD |= (1 << I2S_SCK); }
 static inline void _sck_low(void)  { PORTD &= ~(1 << I2S_SCK);  }
@@ -80,10 +94,10 @@ static int32_t _xcorr_at_lag(i2sBuffer *buf, int ch_ref, int ch_other, int16_t l
 // retorna o lag de máxima correlação entre ch_ref e ch_other
 int16_t xcorr_peak_lag(i2sBuffer *buf, int ch_ref, int ch_other) {
     int16_t best_lag = 0;
-    int32_t best_val = INT32_MIN;   // faltava declarar
+    int32_t best_val = INT32_MIN; 
     for (int16_t lag = -I2S_MAX_LAG; lag <= I2S_MAX_LAG; lag++) {
         int32_t val = _xcorr_at_lag(buf, ch_ref, ch_other, lag);
-        if (val > best_val) {        // era "val > INT32_MIN" — sempre verdadeiro
+        if (val > best_val) {
             best_val = val;
             best_lag = lag;
         }
@@ -94,6 +108,19 @@ int16_t xcorr_peak_lag(i2sBuffer *buf, int ch_ref, int ch_other) {
 static float lag_to_r(int16_t lag, float sampleRate) {
     float delta_t = (float)lag / sampleRate;
     return SND_SPEED * delta_t / SND_MIC_DIS;
+}
+
+void has_something_happened(i2sBuffer *buf, float sampleRate, byteMask *byte) {
+    byte->BIT_EVENT_EMA = false;
+    for (uint8_t i = 0; i < 3; i++) {
+        buf->r_unit[i] = 0.0f;
+    }
+    for (int8_t ch = 0; ch < I2S_CHANNELS; ch++)
+        if (buf->ema[ch] > 0.5f) { byte->BIT_EVENT_EMA = true; break; }
+    if (!byte->BIT_EVENT_EMA) return;
+    for (uint8_t i = 0; i < 3; i++) {
+        buf->r_unit[i] = lag_to_r(xcorr_peak_lag(buf, 0, (i+1)), sampleRate);
+    }
 }
 
 void i2s_capture(i2sBuffer *buf) {
@@ -110,6 +137,7 @@ void i2s_capture(i2sBuffer *buf) {
             _sck_high(); NS_DELAY;
             _read_sd(sd);
             _sck_low();
+            // sem delay aqui devido ao loop de gravação.
             for (int ch = 0; ch < I2S_CHANNELS; ch++)
                 if (sd[ch]) raw[ch] |= (1L << bit);
         }
@@ -133,8 +161,9 @@ void i2s_capture(i2sBuffer *buf) {
 }
 
 static i2sBuffer buf;
+static byteMask logic_byte;
 
-void basicDebug(i2sBuffer *buf, long *processTime, long *sampleRate) {
+void basicDebug(i2sBuffer *buf, long *processTime, long *sampleRate, byteMask *byte) {
     for (uint16_t s = 0; s < I2S_MAX_SAMPLES; s++) {
         Serial.print(SND_THRES_AMP);  Serial.print(",");
         Serial.print(-SND_THRES_AMP); Serial.print(",");
@@ -144,32 +173,20 @@ void basicDebug(i2sBuffer *buf, long *processTime, long *sampleRate) {
         }
         Serial.println();
     }
-    Serial.print("# r=");
-    Serial.print(buf->r_unit[0]); Serial.print(",");
-    Serial.print(buf->r_unit[1]); Serial.print(",");
-    Serial.println(buf->r_unit[2]);
+    if (byte->BIT_EVENT_EMA) {
+        Serial.print("# r=");
+        Serial.print(buf->r_unit[0]); Serial.print(",");
+        Serial.print(buf->r_unit[1]); Serial.print(",");
+        Serial.println(buf->r_unit[2]);
+    } else { Serial.println("# NO_EVENT"); }
     Serial.print("# processTime="); Serial.print(*processTime);
     Serial.print("ms sampleRate="); Serial.print(*sampleRate);
     Serial.println("sps");
 }
 
-void has_something_happened(i2sBuffer *buf, float sampleRate) {
-    bool evento = false;
-    for (uint8_t i = 0; i < 3; i++) {
-        buf->r_unit[i] = 0.0f;
-    }
-    for (int ch = 0; ch < I2S_CHANNELS; ch++)
-        if (buf->ema[ch] > 0.5f) { evento = true; break; }
-    if (!evento) return;
-    buf->r_unit[0] = lag_to_r(xcorr_peak_lag(buf, 0, 1), sampleRate);
-    buf->r_unit[1] = lag_to_r(xcorr_peak_lag(buf, 0, 2), sampleRate);
-    buf->r_unit[2] = lag_to_r(xcorr_peak_lag(buf, 0, 3), sampleRate);
-}
-
 void setup() {
     Serial.begin(115200);
-    delay(1000);
-    Serial.println("=== TESTE I2S BIT-BANG || 4x INMP441 ===");
+    Serial.println("=== TLOC2 || TDOA ===");
     i2s_init();
 }
 
@@ -178,6 +195,6 @@ void loop() {
     i2s_capture(&buf);
     long processTime = millis() - initTime;
     long sampleRate = (1000L * I2S_MAX_SAMPLES) / processTime;
-    has_something_happened(&buf, (float)sampleRate);
-    basicDebug(&buf, &processTime, &sampleRate);
+    has_something_happened(&buf, (float)sampleRate, &logic_byte);
+    basicDebug(&buf, &processTime, &sampleRate, &logic_byte);
 }
