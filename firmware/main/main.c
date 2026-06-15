@@ -1,0 +1,39 @@
+#include "jloc2.h"
+#include "lib/tcp_debug.h"
+
+static i2sBuffer buf;
+static dbg_packet_t pkt;
+
+void app_main(void) {
+    wifi_debug_init();
+    i2s_init();
+
+    while (1) {
+        if (!i2s_start_capture(&buf)) continue;
+
+        // loc2d_print_debug(&buf);
+
+        if (!loc2d_detect(&buf)) continue;
+
+        // printf(str_loc_r_unit, COR1, (f64)buf.r_unit[0], (f64)buf.r_unit[1], (f64)buf.r_unit[2], COR0);
+
+        f64 r[3] = { buf.r_unit[0], buf.r_unit[1], buf.r_unit[2] };
+        linSys3 sys;
+        loc2d_build_tdoa_system(MIC_POS_UNIT, 0, r, &sys);
+
+        sndLoc2 loc;
+        loc2d_solve_tdoa(&sys, &loc);
+
+        pkt.flags    = (event ? DBG_FLAG_EVENT : 0) | (loc.valid ? DBG_FLAG_VALID : 0) | (ok ? DBG_FLAG_CAPOK : 0);
+        pkt.ema[0]   = buf.ema[0]; pkt.ema[1] = buf.ema[1];
+        pkt.ema[2]   = buf.ema[2]; pkt.ema[3] = buf.ema[3];
+        pkt.r_unit[0] = buf.r_unit[0];
+        pkt.r_unit[1] = buf.r_unit[1];
+        pkt.r_unit[2] = buf.r_unit[2];
+        pkt.loc_x    = (f32)loc.x;
+        pkt.loc_y    = (f32)loc.y;
+        pkt.loc_d_ref = (f32)loc.d_ref;
+
+        wifi_debug_send(&pkt);  
+    }
+}
