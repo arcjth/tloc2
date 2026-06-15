@@ -28,6 +28,6 @@ typedef double   f64;
 
 char *get_input(char *input, int max);
 f64   get_value(void);
-u32   get_value_uint(u32 max);
+u32   get_uvalue(u32 max);
 
 #endif

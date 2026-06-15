@@ -9,20 +9,18 @@ void app_main(void) {
     i2s_init();
 
     while (1) {
-        if (!i2s_start_capture(&buf)) continue;
+        
+        bool ok    = i2s_start_capture(&buf);
+        bool event = loc2d_detect(&buf);
 
-        // loc2d_print_debug(&buf);
+        sndLoc2 loc = {0};
 
-        if (!loc2d_detect(&buf)) continue;
-
-        // printf(str_loc_r_unit, COR1, (f64)buf.r_unit[0], (f64)buf.r_unit[1], (f64)buf.r_unit[2], COR0);
-
-        f64 r[3] = { buf.r_unit[0], buf.r_unit[1], buf.r_unit[2] };
-        linSys3 sys;
-        loc2d_build_tdoa_system(MIC_POS_UNIT, 0, r, &sys);
-
-        sndLoc2 loc;
-        loc2d_solve_tdoa(&sys, &loc);
+        if (event) {
+            f64 r[3] = { buf.r_unit[0], buf.r_unit[1], buf.r_unit[2] };
+            linSys3 sys;
+            loc2d_build_tdoa_system(MIC_POS_UNIT, 0, r, &sys);
+            loc2d_solve_tdoa(&sys, &loc);
+        }
 
         pkt.flags    = (event ? DBG_FLAG_EVENT : 0) | (loc.valid ? DBG_FLAG_VALID : 0) | (ok ? DBG_FLAG_CAPOK : 0);
         pkt.ema[0]   = buf.ema[0]; pkt.ema[1] = buf.ema[1];

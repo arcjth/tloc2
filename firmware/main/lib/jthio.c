@@ -21,7 +21,7 @@ char *get_input(char *input, int max) {
 * non dot decimals (ex: EU, BR notations), cientific notation, etc.
 * for non-negative values, please use get_uvalue()
  */
-double get_value(void) {
+f64 get_value(void) {
     const char *conversion_error = "\nUm erro pode ter ocorrido na conversão, verifique o valor inserido \n(dica: utilize not. científica (ex: 1,7E-9 = 1,7 nano, 1,0e6 = 1 milhão)).";
     char input[MAX];
     double value = 0.0;
@@ -32,45 +32,24 @@ double get_value(void) {
     value = atof(input);
     return value;
 }
-double get_uvalue(void) {
-    const char *conversion_error = "\nUm erro pode ter ocorrido na conversão, verifique o valor inserido \n(dica: utilize not. científica (ex: 1,7E-9 = 1,7 nano, 1,0e6 = 1 milhão)).";
-    char input[MAX];
-    double value = 0.0;
-    while (value <= 0.0) {
-        get_input(input, MAX);
-        for (char *pinput = input; *pinput != '\0'; pinput++) {
-            if (*pinput == ',') *pinput = '.'; // pra permitir a notação brasileira, europeia ou internacional
-        }
-        value = atof(input);
-    }
-    return value;
-}
 /** 
 * @brief same as get_value() but returns an unsigned integer, 
 * for positive double precision floats, use get_uvalue.
 * set @param[in] max to -1 to disable it.
 */
-unsigned int get_value_uint(unsigned int max) {
-    unsigned int nof = 0;
+u32 get_uvalue(u32 max) {
+    unsigned int uvalue = 0;
     char input[MAX];
-    while(nof == 0) {
-        int value = atoi(get_input(input, MAX));
-        if (value <= 0 ) {
-            printf("%s", ioInvalid);
-            continue;
-        } else if (max >= 1 && value > max) {
-            printf(ioSizeError, max);
-            continue;
-        } else nof = value;
-    }
-    return nof;
+    // could be a u32 directly, but negative values would break
+    i64 value = atoi(get_input(input, MAX));
+    if (value <= 0 ) {
+        printf("%s", ioInvalid);
+    } else if (max >= 1 && value > max) {
+        printf(ioSizeError, max);
+    } else uvalue = value;
+    return uvalue;
 }
 
 int32_t i2s_convert_24bit_signed(int32_t raw) {
-    return raw >> 8;
-}
-
-void i2s_init(void) {
-    // TODO: colocar aqui inicializacao de vdd, por enquanto só roleplay I2S + DMA
-    printf(str_i2s_init, COR2, I2S_CHANNELS, COR0);
+      return raw >> 8;
 }
