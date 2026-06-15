@@ -1,10 +1,14 @@
 .csv
 .vscode
-*.cache*
-*build*
+.cache
 firmware/.cache
 firmware/build
-
+firmware/sdkconfig
+firmware/sdkconfig.old
+build/
+sdkconfig
+sdkconfig.old
+.cache
 
 # For PCBs designed using KiCad: https://www.kicad.org/
 # Format documentation: https://kicad.org/help/file-formats/
