@@ -1,24 +1,26 @@
 #ifndef JLINEAR
 #define JLINEAR
 
+#include "jthio.h"
+
 // ================================================
 // Módulo geral de sistema linear 3x3
 // Ax = b
 // ================================================
 
 typedef struct vec2_t {
-    double i, j;
+    f64 i, j;
 } vec2;
 typedef struct pol2_t {
-    double mag, angle;
+    f64 mag, angle;
 } pol2;
 
 typedef struct linear_sys3_t {
-    double A[3][3];
-    double b[3];
-    double x[3];          // solução final (x0, x1, x2)
+    f64 A[3][3];
+    f64 b[3];
+    f64 x[3];          // solução final (x0, x1, x2)
     bool solved;
-    double detA;          // det(A) debug
+    f64 detA;          // det(A) debug
 } linSys3;
 
 static inline vec2 vec2_neg(vec2 vec);
@@ -32,6 +34,6 @@ static inline pol2 pol2_div(pol2 a, pol2 b);
 void lin3_print(const char *nome, linSys3 *sys);
 void lin3_gaussian_solve(linSys3 *sys);   // para mcu
 void lin3_cramer_solve(linSys3 *sys);     // manual
-double lin3_det(const double A[3][3]);    // determinante auxiliar
+double lin3_det(const f64 A[3][3]);    // determinante auxiliar
 
 #endif

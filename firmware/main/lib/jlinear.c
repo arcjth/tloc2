@@ -12,7 +12,7 @@ static const char *str_lin_det_zero = "\n%sAVISO: Matriz singular (det ≈ 0)!%s
 static inline vec2 vec2_addsub(vec2 vec_a, vec2 vec_b) {
     return (vec2){vec_a.i + vec_b.i, vec_a.j + vec_b.j};
 }
-static inline vec2 vec2_scale(vec2 vec, double k) {
+static inline vec2 vec2_scale(vec2 vec, f64 k) {
     return (vec2){vec.i * k, vec.j * k};
 }
 static inline vec2 polar2rect(pol2 vec) {
@@ -40,7 +40,7 @@ void lin3_print(const char *nome, linSys3 *sys) {
 }
 
 // determinante 3x3
-double lin3_det(const double A[3][3]) {
+f64 lin3_det(const f64 A[3][3]) {
     return A[0][0]*(A[1][1]*A[2][2] - A[1][2]*A[2][1]) -
            A[0][1]*(A[1][0]*A[2][2] - A[1][2]*A[2][0]) +
            A[0][2]*(A[1][0]*A[2][1] - A[1][1]*A[2][0]);
@@ -48,25 +48,25 @@ double lin3_det(const double A[3][3]) {
 
 // eliminação Gaussiana
 void lin3_gaussian_solve(linSys3 *sys) {
-    double mat[3][4]; // matriz aumentada [A|b]
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) mat[i][j] = sys->A[i][j];
+    f64 mat[3][4]; // matriz aumentada [A|b]
+    for (u8 i = 0; i < 3; ++i) {
+        for (u8 j = 0; j < 3; ++j) mat[i][j] = sys->A[i][j];
         mat[i][3] = sys->b[i];
     }
 
     // eliminação progressiva com pivoteamento parcial
-    for (int p = 0; p < 3; ++p) {
+    for (u8 p = 0; p < 3; ++p) {
         int maxRow = p;
-        double maxVal = fabs(mat[p][p]);
-        for (int i = p + 1; i < 3; ++i) {
+        f64 maxVal = fabs(mat[p][p]);
+        for (u8 i = p + 1; i < 3; ++i) {
             if (fabs(mat[i][p]) > maxVal) {
                 maxVal = fabs(mat[i][p]);
                 maxRow = i;
             }
         }
         // troca de linhas
-        for (int j = 0; j < 4; ++j) {
-            double tmp = mat[p][j];
+        for (u8 j = 0; j < 4; ++j) {
+            f64 tmp = mat[p][j];
             mat[p][j] = mat[maxRow][j];
             mat[maxRow][j] = tmp;
         }
@@ -78,8 +78,8 @@ void lin3_gaussian_solve(linSys3 *sys) {
         }
 
         // remoção
-        for (int i = p + 1; i < 3; ++i) {
-            double factor = mat[i][p] / mat[p][p];
+        for (u8 i = p + 1; i < 3; ++i) {
+            f64 factor = mat[i][p] / mat[p][p];
             for (int j = p; j < 4; ++j) {
                 mat[i][j] -= factor * mat[p][j];
             }
@@ -87,14 +87,15 @@ void lin3_gaussian_solve(linSys3 *sys) {
     }
 
     // Substituição regressiva
-    double x[3];
-    for (int i = 2; i >= 0; --i) {
-        double sum = 0.0;
-        for (int j = i + 1; j < 3; ++j) sum += mat[i][j] * x[j];
+    f64 x[3];
+    // u8 wraps around here? maybe not
+    for (i16 i = 2; i >= 0; --i) {
+        f64 sum = 0.0;
+        for (u8 j = i + 1; j < 3; ++j) sum += mat[i][j] * x[j];
         x[i] = (mat[i][3] - sum) / mat[i][i];
     }
 
-    for (int i = 0; i < 3; ++i) sys->x[i] = x[i];
+    for (u8 i = 0; i < 3; ++i) sys->x[i] = x[i];
     sys->solved = true;
     printf(str_lin_solved_gauss, COR2, COR0);
 }
@@ -109,15 +110,15 @@ void lin3_cramer_solve(linSys3 *sys) {
     }
 
     // Matriz Ax (substitui coluna 0 por b)
-    double Ax[3][3] = {{sys->b[0], sys->A[0][1], sys->A[0][2]},
+    f64 Ax[3][3] = {{sys->b[0], sys->A[0][1], sys->A[0][2]},
                        {sys->b[1], sys->A[1][1], sys->A[1][2]},
                        {sys->b[2], sys->A[2][1], sys->A[2][2]}};
     // Ay (coluna 1)
-    double Ay[3][3] = {{sys->A[0][0], sys->b[0], sys->A[0][2]},
+    f64 Ay[3][3] = {{sys->A[0][0], sys->b[0], sys->A[0][2]},
                        {sys->A[1][0], sys->b[1], sys->A[1][2]},
                        {sys->A[2][0], sys->b[2], sys->A[2][2]}};
     // Ad (coluna 2)
-    double Ad[3][3] = {{sys->A[0][0], sys->A[0][1], sys->b[0]},
+    f64 Ad[3][3] = {{sys->A[0][0], sys->A[0][1], sys->b[0]},
                        {sys->A[1][0], sys->A[1][1], sys->b[1]},
                        {sys->A[2][0], sys->A[2][1], sys->b[2]}};
 

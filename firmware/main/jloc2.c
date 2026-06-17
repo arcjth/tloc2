@@ -24,6 +24,7 @@ i16 xcorr_peak_lag(i2sBuffer *buf, int ch_ref, int ch_other) {
 
 static inline i32 _abs32(i32 x) { return x < 0 ? -x : x; }
 
+// por filtro casado, TODO considerar alternativas
 bool loc2d_detect(i2sBuffer *buf) {
     for (int ch = 0; ch < I2S_CHANNELS; ch++) {
         i64 sum = 0;
