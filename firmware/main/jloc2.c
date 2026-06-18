@@ -35,6 +35,7 @@ bool loc2d_detect(i2sBuffer *buf) {
     }
 
     bool event = false;
+
     for (int ch = 0; ch < I2S_CHANNELS; ch++)
         if (buf->ema[ch] > SND_THRES_AMP) { event = true; break; }
     if (!event) return false;

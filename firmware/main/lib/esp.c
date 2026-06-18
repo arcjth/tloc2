@@ -5,7 +5,7 @@ static const char *TAG = "TLOC2";
 static i2s_chan_handle_t rx0, rx1;
 static i32 tmp[I2S_MAX_SAMPLES * 2];    // scratch estéreo para desentrelaçamento
 
-static i2s_chan_handle_t _i2s_create(i2s_port_t port, i2s_role_t role, gpio_num_t ws, gpio_num_t sd) {
+static i2s_chan_handle_t _i2s_create(int port, i2s_role_t role, gpio_num_t ws, gpio_num_t sd) {
     i2s_chan_handle_t rx;
 
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(port, role);
