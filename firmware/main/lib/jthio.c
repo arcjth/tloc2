@@ -37,7 +37,7 @@ f64 get_value(void) {
 * for positive double precision floats, use get_uvalue.
 * set @param[in] max to -1 to disable it.
 */
-u32 get_uvalue(u32 max) {
+u32 get_uvalue(size_t max) {
     unsigned int uvalue = 0;
     char input[MAX];
     // could be a u32 directly, but negative values would break
@@ -46,10 +46,10 @@ u32 get_uvalue(u32 max) {
         printf("%s", ioInvalid);
     } else if (max >= 1 && value > max) {
         printf(ioSizeError, max);
-    } else uvalue = value;
+    } else uvalue = (u32)value;
     return uvalue;
 }
 
 int32_t i2s_convert_24bit_signed(int32_t raw) {
-      return raw >> 8;
+    return raw >> 8;
 }

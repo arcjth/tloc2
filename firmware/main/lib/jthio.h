@@ -24,10 +24,10 @@ typedef double   f64;
 #define MAX         0xFFFF
 #define ioInvalid   "\nComando inválido.\a"
 #define ioExit      "\nSaindo..."
-#define ioSizeError "\nO valor máximo é %d."
+#define ioSizeError "\nO valor máximo é %zu."
 
 char *get_input(char *input, int max);
 f64   get_value(void);
-u32   get_uvalue(u32 max);
+u32   get_uvalue(size_t max);
 
 #endif
