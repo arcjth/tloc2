@@ -6,6 +6,7 @@ firmware/build
 firmware/sdkconfig
 firmware/sdkconfig.old
 build/
+tools/Jclient.jar
 sdkconfig
 sdkconfig.old
 .cache
