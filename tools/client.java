@@ -7,7 +7,7 @@ public class EspTelemetryClient {
 
     private static final String ESP32_IP = "192.168.4.1"; 
     private static final int DBG_PORT = 3333;             
-    private static final int DBG_MAGIC = 0xABCD1234; 
+    private static final int DBG_MAGIC = 0xBEEF1234; 
 
     private static final int PACKET_SIZE = 48; 
 
