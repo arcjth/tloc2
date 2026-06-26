@@ -5,7 +5,7 @@
 
 #define DBG_MAGIC       0xBEEF1234
 #define DBG_PORT        3333
-#define DBG_SSID        "TLOC2"
+#define DBG_SSID        "TLOC2_JZZTHU"
 #define DBG_PASS        "tloc2debug"
 
 #define DBG_FLAG_EVENT  (1u << 0)   // event detected

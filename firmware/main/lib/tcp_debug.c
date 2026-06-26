@@ -34,7 +34,6 @@ static void _server_task(void *arg) {
         ESP_LOGI(TAG, "cliente conectado");
         _client_fd = fd;
 
-        // aguarda desconexão detectada por wifi_debug_send
         while (_client_fd >= 0)
             vTaskDelay(pdMS_TO_TICKS(100));
 
@@ -58,7 +57,7 @@ void wifi_debug_init(void) {
             .ssid            = DBG_SSID,
             .password        = DBG_PASS,
             .ssid_len        = strlen(DBG_SSID),
-            .channel         = 1,
+            .channel         = 11,
             .authmode        = WIFI_AUTH_WPA2_PSK,
             .max_connection  = 1,
         },
@@ -80,7 +79,7 @@ bool wifi_debug_send(dbg_packet_t *pkt) {
     pkt->magic = DBG_MAGIC;
     int ret = send(fd, pkt, sizeof(dbg_packet_t), MSG_DONTWAIT);
     if (ret != (int)sizeof(dbg_packet_t)) {
-        _client_fd = -1;    // sinaliza server_task para fechar e re-accept
+        _client_fd = -1; 
         return false;
     }
     return true;
