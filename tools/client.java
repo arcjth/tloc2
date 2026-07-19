@@ -3,7 +3,7 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class EspTelemetryClient {
+public class client {
 
     private static final String ESP32_IP = "192.168.4.1"; 
     private static final int DBG_PORT = 3333;             
@@ -12,7 +12,7 @@ public class EspTelemetryClient {
     private static final int PACKET_SIZE = 48; 
 
     public static void main(String[] args) {
-        System.out.println("connecting to ESP32 stream at " + ESP32_IP + ":" + DBG_PORT + "...");
+        System.out.println("connecting to esp32  @" + ESP32_IP + ":" + DBG_PORT + "...");
 
         ByteBuffer streamBuffer = ByteBuffer.allocate(8192);
         streamBuffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -31,9 +31,12 @@ public class EspTelemetryClient {
                     break;
                 }
 
+                System.out.printf("[RAW] got %d bytes from esp32.%n", bytesRead);
                 streamBuffer.put(tempReadBuffer, 0, bytesRead);
                 
                 streamBuffer.flip();
+
+                System.out.printf(" buffer state: remaining=%d, target_packet_size=%d%n",  streamBuffer.remaining(), PACKET_SIZE);
 
                 while (streamBuffer.remaining() >= PACKET_SIZE) {
                     streamBuffer.mark();
@@ -56,17 +59,12 @@ public class EspTelemetryClient {
                         float locY = streamBuffer.getFloat();
                         float locDRef = streamBuffer.getFloat();
 
-                        System.out.printf("
-                            [PACKET] Flags: %s | 
-                            Coords: (%.2f, %.2f) | 
-                            d_ref: %.2f%n", 
-                            Integer.toBinaryString(flags), locX, locY, locDRef);
+                        System.out.printf(" [PACKET] flags: %s |  coords: (%.2f, %.2f) |  d_ref: %.2f%n", Integer.toBinaryString(flags), locX, locY, locDRef);
 
-                        System.out.printf("
-                            EMA Mics: [%.1f, %.1f, %.1f, %.1f]%n",
-                            ema0, ema1, ema2, ema3);
+                        System.out.printf(" EMA Mics: [%.1f, %.1f, %.1f, %.1f]%n", ema0, ema1, ema2, ema3);
 
                     } else {
+                        System.out.printf(" [MISMATCH] expected Magic 0x%X, but got 0x%X. Skipping 1 byte...%n",  DBG_MAGIC, magicCheck);
                         streamBuffer.reset();
                         streamBuffer.get(); // trashes 1 byte
                     }

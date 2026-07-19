@@ -6,10 +6,18 @@ firmware/build
 firmware/sdkconfig
 firmware/sdkconfig.old
 build/
-tools/Jclient.jar
 sdkconfig
 sdkconfig.old
 .cache
+
+
+*.jar
+*.war
+*.ear
+*.nar
+
+
+
 
 # For PCBs designed using KiCad: https://www.kicad.org/
 # Format documentation: https://kicad.org/help/file-formats/
