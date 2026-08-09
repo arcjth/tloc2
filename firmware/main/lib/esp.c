@@ -73,13 +73,11 @@ bool i2s_start_capture(i2sBuffer *buf) {
         buf->samples[s][1] = i2s_convert_signed(tmp[s * 2 + 1]);
     }
 
-    // rx1 acumulou no DMA enquanto rx0 bloqueava
     if (i2s_channel_read(rx1, tmp, read_bytes, &bytes_read, portMAX_DELAY) != ESP_OK) ok = false;
     for (int s = 0; s < I2S_MAX_SAMPLES; s++) {
         buf->samples[s][2] = i2s_convert_signed(tmp[s * 2]);
         buf->samples[s][3] = i2s_convert_signed(tmp[s * 2 + 1]);
     }
-
     return ok;
 }
 

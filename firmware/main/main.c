@@ -9,9 +9,14 @@ void app_main(void) {
     i2s_init();
 
     while (1) {
-        
-        bool ok    = i2s_start_capture(&buf);
+        ESP_LOGI("entered main loop"); 
+        bool ok = i2s_start_capture(&buf);
+        void i2s_stop_capture();
+        ESP_LOGI("finalized read");
+        printf("read status: %d", (i8)ok);
         bool event = loc2d_detect(&buf);
+        ESP_LOGI("detecting event occured");
+        printf("has event occured %d", (i8)event);
 
         sndLoc2 loc = {0};
 
