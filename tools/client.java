@@ -9,7 +9,7 @@ public class client {
     private static final int DBG_PORT = 3333;             
     private static final int DBG_MAGIC = 0xBEEF1234; 
 
-    private static final int PACKET_SIZE = 48; 
+    private static final int PACKET_SIZE = 224; 
 
     public static void main(String[] args) {
         System.out.println("connecting to esp32  @" + ESP32_IP + ":" + DBG_PORT + "...");
@@ -38,7 +38,7 @@ public class client {
 
                 System.out.printf(" buffer state: remaining=%d, target_packet_size=%d%n",  streamBuffer.remaining(), PACKET_SIZE);
 
-                while (streamBuffer.remaining() >= PACKET_SIZE) {
+                while (streamBuffer.remaining() <= PACKET_SIZE) {
                     streamBuffer.mark();
                     
                     int magicCheck = streamBuffer.getInt();
