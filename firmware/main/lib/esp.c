@@ -72,13 +72,6 @@ bool i2s_start_capture(i2sBuffer *buf) {
         
         buf->samples[s][0] = i2s_convert_signed(tmp[s * 2]);
         buf->samples[s][1] = i2s_convert_signed(tmp[s * 2 + 1]);
-        u8 *v = (u8*) tmp;
-
-        if (s > 20) continue; 
-        printf("read \n");
-        printf("%02x %02x %02x %02x -> %d -> %f \n",
-            v[0], v[1], v[2], v[3], *v, buf->samples[s][0] / 0x800000p0f);
-        printf("\n");
     }
 
     if (i2s_channel_read(rx1, tmp, read_bytes, &bytes_read, portMAX_DELAY) != ESP_OK) ok = false;
