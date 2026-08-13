@@ -13,7 +13,7 @@ i64 _xcorr_at_lag(i2sBuffer *buf, int ch_ref, int ch_other, i16 lag) {
     return acc;
 }
 
-void _from_channel(i2sBuffer *buf, u8 ch, f32 *out) {
+static void _from_channel(i2sBuffer *buf, u8 ch, f32 *out) {
     for (u16 n = 0; n < I2S_MAX_SAMPLES; n++) {
         out[n] = (f32)(buf->samples[n][ch] >> XCORR_SHIFT);
         if (n > 20) continue; 

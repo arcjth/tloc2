@@ -22,6 +22,7 @@ void app_main(void) {
             linSys3 sys;
             loc2d_build_tdoa_system(MIC_POS_UNIT, 0, r, &sys);
             loc2d_solve_tdoa(&sys, &loc);
+            loc2d_print_debug(&buf);
             //lin3_print("[BIN RAW]", &sys);
         }
 

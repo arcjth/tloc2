@@ -12,9 +12,12 @@
 
 match_t snd_matched_filter(float* a, float* b, int samples) {
     int len = samples * 2 - 1;
-    float* v = malloc(sizeof(*v) * len);
-    dsps_ccorr_f32_ae32(b, samples, a, samples, v);
-
+    float *v = malloc(sizeof(*v) * len);
+    if (v == NULL) {
+        printf("brutal error\n");
+        return (match_t) {0, 0};
+    } printf("noerror\n");
+    dsps_ccorr_f32_ae32(b, samples, a, samples, v); 
     float lag = 0;
     float corr = -1;
     for (int i = 0; i < len; i++) {

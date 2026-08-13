@@ -7,7 +7,7 @@
 
 #define SND_SPEED     343.0f
 #define SND_MIC_DIS   0.545f
-#define SND_THRES_AMP 500000L
+#define SND_THRES_AMP 100.0f 
 #define SND_EMA_RATE  0.1f
 #define MIC_SCALE_M   0.550
 
