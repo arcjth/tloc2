@@ -1,22 +1,19 @@
 #include "jloc2.h"
+#include "lib/jlinear.h"
 #include "lib/tcp_debug.h"
 
 static i2sBuffer buf;
 static dbg_packet_t pkt;
 
 void app_main(void) {
-    wifi_debug_init();
     i2s_init();
-
+    wifi_debug_init();
     while (1) {
-        ESP_LOGI("entered main loop"); 
         bool ok = i2s_start_capture(&buf);
         void i2s_stop_capture();
-        ESP_LOGI("finalized read");
-        printf("read status: %d", (i8)ok);
-        bool event = loc2d_detect(&buf);
-        ESP_LOGI("detecting event occured");
-        printf("has event occured %d", (i8)event);
+        printf("read status: %d \n", (i8)ok);
+        bool event = loc2d_detect(&buf);  
+        printf("has event occured %d \n", (i8)event);
 
         sndLoc2 loc = {0};
 
@@ -25,7 +22,10 @@ void app_main(void) {
             linSys3 sys;
             loc2d_build_tdoa_system(MIC_POS_UNIT, 0, r, &sys);
             loc2d_solve_tdoa(&sys, &loc);
+            //lin3_print("[BIN RAW]", &sys);
         }
+
+
 
         pkt.flags    = (event ? DBG_FLAG_EVENT : 0) | (loc.valid ? DBG_FLAG_VALID : 0) | (ok ? DBG_FLAG_CAPOK : 0);
         pkt.ema[0]   = buf.ema[0]; pkt.ema[1] = buf.ema[1];

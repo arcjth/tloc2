@@ -13,10 +13,10 @@
 #include "esp_timer.h"
 #include "esp_err.h"
 
-#define PIN_WS  GPIO_NUM_4
+#define PIN_WS  GPIO_NUM_32
 #define PIN_SCK GPIO_NUM_18
 #define PIN_SD0 GPIO_NUM_33
-#define PIN_SD1 GPIO_NUM_35
+#define PIN_SD1 GPIO_NUM_4
 
 #define I2S_SAMPLE_RATE     48000 
 #define I2S_DMA_DESC        8

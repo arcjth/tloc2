@@ -21,7 +21,7 @@ static i2s_chan_handle_t _i2s_create(int port, i2s_role_t role, gpio_num_t ws, g
         .clk_cfg  = {
             .sample_rate_hz  = I2S_SAMPLE_RATE,
             .clk_src         = I2S_CLK_SRC_DEFAULT,
-            .ext_clk_freq_hz = 0,
+            //.ext_clk_freq_hz = 0,
             .mclk_multiple   = I2S_MCLK_MULT,
             .bclk_div        = 8,
         },
@@ -69,8 +69,16 @@ bool i2s_start_capture(i2sBuffer *buf) {
 
     if (i2s_channel_read(rx0, tmp, read_bytes, &bytes_read, portMAX_DELAY) != ESP_OK) ok = false;
     for (int s = 0; s < I2S_MAX_SAMPLES; s++) {
+        
         buf->samples[s][0] = i2s_convert_signed(tmp[s * 2]);
         buf->samples[s][1] = i2s_convert_signed(tmp[s * 2 + 1]);
+        u8 *v = (u8*) tmp;
+
+        if (s > 20) continue; 
+        printf("read \n");
+        printf("%02x %02x %02x %02x -> %d -> %f \n",
+            v[0], v[1], v[2], v[3], *v, buf->samples[s][0] / 0x800000p0f);
+        printf("\n");
     }
 
     if (i2s_channel_read(rx1, tmp, read_bytes, &bytes_read, portMAX_DELAY) != ESP_OK) ok = false;

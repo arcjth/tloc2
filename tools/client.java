@@ -38,7 +38,7 @@ public class client {
 
                 System.out.printf(" buffer state: remaining=%d, target_packet_size=%d%n",  streamBuffer.remaining(), PACKET_SIZE);
 
-                while (streamBuffer.remaining() <= PACKET_SIZE) {
+                while (streamBuffer.remaining() >= PACKET_SIZE) {
                     streamBuffer.mark();
                     
                     int magicCheck = streamBuffer.getInt();
@@ -70,8 +70,6 @@ public class client {
                     }
                 }
 
-                // compact the buffer to shift any partial packet remnants to the beginning 
-                // and clear up space for the next network read loop
                 streamBuffer.compact();
             }
 

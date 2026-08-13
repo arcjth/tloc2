@@ -1,7 +1,10 @@
 #include "jloc2.h"
+#include "lib/potors/snd.h"
 #include <stdio.h>
 
-static i64 _xcorr_at_lag(i2sBuffer *buf, int ch_ref, int ch_other, i16 lag) {
+#define XCORR_EVAL "xcorr_eval_log:"
+
+i64 _xcorr_at_lag(i2sBuffer *buf, int ch_ref, int ch_other, i16 lag) {
     i64 acc = 0;
     for (u16 n = XCORR_MAX_LAG; n < I2S_MAX_SAMPLES - XCORR_MAX_LAG; n++) {
         acc += (i64)(buf->samples[n][ch_ref]         >> XCORR_SHIFT)
@@ -10,43 +13,55 @@ static i64 _xcorr_at_lag(i2sBuffer *buf, int ch_ref, int ch_other, i16 lag) {
     return acc;
 }
 
-
-i16 xcorr_peak_lag(i2sBuffer *buf, int ch_ref, int ch_other) {
-    i16 best_lag = 0;
-    i64 best_val = INT64_MIN;
-    for (i16 lag = -XCORR_MAX_LAG; lag <= XCORR_MAX_LAG; lag++) {
-        i64 val = _xcorr_at_lag(buf, ch_ref, ch_other, lag);
-        if (val > best_val) { best_val = val; best_lag = lag; }
+void _from_channel(i2sBuffer *buf, u8 ch, f32 *out) {
+    for (u16 n = 0; n < I2S_MAX_SAMPLES; n++) {
+        u8* v = (u8*) &buf->samples[n][ch];      
+        out[n] = (f32)(buf->samples[n][ch] >> XCORR_SHIFT);
+        if (n > 20) continue; 
+        printf("%02x %02x %02x %02x -> %d -> %f \n",
+            v[0], v[1], v[2], v[3], *v, out[n]);
     }
-    return best_lag;
 }
 
+i16 xcorr_peak_lag(i2sBuffer *buf, int ch_ref, int ch_other) {
+    static float a[I2S_MAX_SAMPLES];
+    static float b[I2S_MAX_SAMPLES];
+    _from_channel(buf,   ch_ref, a);
+    _from_channel(buf, ch_other, b);
+    match_t m = snd_matched_filter(a, b, I2S_MAX_SAMPLES);
+    if (m.lag > XCORR_MAX_LAG) {
+      ESP_LOGI(XCORR_EVAL, "exceded max permitted lag\n");
+    }
+    return (i16)m.lag;
+}
 
 static inline i32 _abs32(i32 x) { return x < 0 ? -x : x; }
 
 bool loc2d_detect(i2sBuffer *buf) {
+    static float ref_buf[I2S_MAX_SAMPLES];
+    static float cmp_buf[I2S_MAX_SAMPLES];
+
+    float rms[I2S_CHANNELS];
     for (int ch = 0; ch < I2S_CHANNELS; ch++) {
-        i64 sum = 0;
-        for (int s = 0; s < I2S_MAX_SAMPLES; s++)
-            sum += _abs32(buf->samples[s][ch]);
-        f32 amp = (f32)(sum / I2S_MAX_SAMPLES);
-        buf->ema[ch] = SND_EMA_RATE * amp + (1.0f - SND_EMA_RATE) * buf->ema[ch];
+        _from_channel(buf, ch, cmp_buf); 
+        rms[ch] = snd_rms(cmp_buf, I2S_MAX_SAMPLES);
+        printf("%f \n", rms[ch]);
+        buf->ema[ch] = rms[ch];
     }
 
     bool event = false;
-
     for (int ch = 0; ch < I2S_CHANNELS; ch++)
         if (buf->ema[ch] > SND_THRES_AMP) { event = true; break; }
     if (!event) return false;
 
-    for (int i = 0; i < LOC_NOREF_CHANNELS; i++)
-        buf->r_unit[i] = (f32)loc2d_r_from_delta_t(
-            (f64)xcorr_peak_lag(buf, 0, i + 1) / I2S_SAMPLE_RATE
-        );
-
+    _from_channel(buf, 0, ref_buf); 
+    for (int i = 0; i < LOC_NOREF_CHANNELS; i++) {
+        _from_channel(buf, i + 1, cmp_buf);
+        match_t m = snd_matched_filter(ref_buf, cmp_buf, I2S_MAX_SAMPLES);
+        buf->r_unit[i] = (f32)loc2d_r_from_delta_t((f64)m.lag / I2S_SAMPLE_RATE);
+    }
     return true;
 }
-
 
 f64 loc2d_r_from_delta_t(f64 delta_t_sec) {
     return SND_SPEED * delta_t_sec / MIC_SCALE_M;
@@ -86,7 +101,6 @@ void loc2d_solve_tdoa(linSys3 *sys, sndLoc2 *loc) {
     printf(loc->valid ? str_loc_solved : str_loc_invalid,
            COR2, loc->x, loc->y, loc->d_ref, COR0);
 }
-
 
 void loc2d_print_debug(i2sBuffer *buf) {
     for (u16 s = 0; s < I2S_MAX_SAMPLES; s++) {

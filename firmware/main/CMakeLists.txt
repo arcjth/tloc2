@@ -6,6 +6,7 @@ idf_component_register(
         "lib/esp.c"
         "lib/jlinear.c"
         "lib/jthio.c"
+        "lib/potors/snd.c"
     INCLUDE_DIRS "."
     REQUIRES
         esp_wifi nvs_flash lwip esp_netif 
