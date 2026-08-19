@@ -22,11 +22,9 @@ void app_main(void) {
             linSys3 sys;
             loc2d_build_tdoa_system(MIC_POS_UNIT, 0, r, &sys);
             loc2d_solve_tdoa(&sys, &loc);
-            loc2d_print_debug(&buf);
-            //lin3_print("[BIN RAW]", &sys);
+            // loc2d_print_debug(&buf);
+            // lin3_print("[BIN RAW]", &sys);
         }
-
-
 
         pkt.flags    = (event ? DBG_FLAG_EVENT : 0) | (loc.valid ? DBG_FLAG_VALID : 0) | (ok ? DBG_FLAG_CAPOK : 0);
         pkt.ema[0]   = buf.ema[0]; pkt.ema[1] = buf.ema[1];

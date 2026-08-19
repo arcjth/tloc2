@@ -21,7 +21,7 @@
 #define I2S_SAMPLE_RATE     48000 
 #define I2S_DMA_DESC        8
 #define I2S_DMA_FRAMES      512
-#define I2S_MAX_SAMPLES     4096
+#define I2S_MAX_SAMPLES     2048
 #define I2S_CHANNELS        4
 #define LOC_NOREF_CHANNELS  (I2S_CHANNELS - 1)
 

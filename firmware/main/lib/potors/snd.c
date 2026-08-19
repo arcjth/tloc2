@@ -2,6 +2,7 @@
 #include <math.h>
 #include <esp_log.h>
 #include <dsps_ccorr.h>
+#include <esp_heap_caps.h>
 
 #define TAG "snd"
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -16,8 +17,9 @@ match_t snd_matched_filter(float* a, float* b, int samples) {
     if (v == NULL) {
         printf("brutal error\n");
         return (match_t) {0, 0};
-    } printf("noerror\n");
+    }
     dsps_ccorr_f32_ae32(b, samples, a, samples, v); 
+
     float lag = 0;
     float corr = -1;
     for (int i = 0; i < len; i++) {

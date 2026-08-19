@@ -2,7 +2,8 @@
   description = "ESP32-WROOM-32 (ESP-IDF) development environment";
 
   inputs = {
-    nixpkgs-esp-dev.url = "github:mirrexagon/nixpkgs-esp-dev";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-esp-dev.url = "github:mirrexagon/nixpkgs-esp-dev/5287d6e1ca9e15ebd5113c41b9590c468e1e001b";
   };
 
   outputs = { self, nixpkgs-esp-dev }:
@@ -31,7 +32,7 @@
             ];
 
             shellHook = ''
-              echo "ESP32-WROOM-32 / ESP-IDF dev shell"
+              echo "ESP32-WROOM-32 / ESP-IDF devshell"
               echo "  idf.py --version"
               echo "  idf.py set-target esp32"
               echo "  idf.py menuconfig"

@@ -55,13 +55,13 @@ bool loc2d_detect(i2sBuffer *buf) {
     for (int i = 0; i < LOC_NOREF_CHANNELS; i++) {
         _from_channel(buf, i + 1, cmp_buf);
         match_t m = snd_matched_filter(ref_buf, cmp_buf, I2S_MAX_SAMPLES);
-        buf->r_unit[i] = (f32)loc2d_r_from_delta_t((f64)m.lag / I2S_SAMPLE_RATE);
+        buf->r_unit[i] = (f32)loc2d_r_from_delta_t((f32)m.lag / I2S_SAMPLE_RATE);
     }
     return true;
 }
 
-f64 loc2d_r_from_delta_t(f64 delta_t_sec) {
-    return SND_SPEED * delta_t_sec / MIC_SCALE_M;
+static inline f32 loc2d_r_from_delta_t(f32 delta_t_sec) {
+    return SND_SPEED * delta_t_sec;
 }
 
 void loc2d_build_tdoa_system(const vec2 mics[4], int ref_idx, const f64 r_unit[3], linSys3 *sys) {
@@ -87,16 +87,17 @@ void loc2d_build_tdoa_system(const vec2 mics[4], int ref_idx, const f64 r_unit[3
 void loc2d_solve_tdoa(linSys3 *sys, sndLoc2 *loc) {
     lin3_gaussian_solve(sys);
     if (!sys->solved) {
-        printf(str_loc_invalid, COR3, COR0);
+        //printf(str_loc_invalid, COR3, COR0);
         loc->valid = false;
         return;
     }
-    loc->x     = sys->x[0] * MIC_SCALE_M;
-    loc->y     = sys->x[1] * MIC_SCALE_M;
-    loc->d_ref = sys->x[2] * MIC_SCALE_M;
+    loc->x     = sys->x[0] ;// * MIC_SCALE_M;
+    loc->y     = sys->x[1] ;// * MIC_SCALE_M;
+    loc->d_ref = sys->x[2] ;// * MIC_SCALE_M;
     loc->valid = (loc->d_ref >= 0.0);
-    printf(loc->valid ? str_loc_solved : str_loc_invalid,
-           COR2, loc->x, loc->y, loc->d_ref, COR0);
+    //printf(loc->valid ? str_loc_solved : str_loc_invalid,
+         //  COR2, loc->x, loc->y, loc->d_ref, COR0);
+    printf("%f %f\n", loc->x, loc->y);
 }
 
 void loc2d_print_debug(i2sBuffer *buf) {
