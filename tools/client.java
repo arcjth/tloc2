@@ -4,11 +4,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class client {
-
     private static final String ESP32_IP = "192.168.4.1"; 
     private static final int DBG_PORT = 3333;             
     private static final int DBG_MAGIC = 0xBEEF1234; 
-
     private static final int PACKET_SIZE = 224; 
 
     public static void main(String[] args) {

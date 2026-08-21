@@ -42,7 +42,6 @@ bool loc2d_detect(i2sBuffer *buf) {
     for (int ch = 0; ch < I2S_CHANNELS; ch++) {
         _from_channel(buf, ch, cmp_buf); 
         rms[ch] = snd_rms(cmp_buf, I2S_MAX_SAMPLES);
-        printf("%f \n", rms[ch]);
         buf->ema[ch] = rms[ch];
     }
 
@@ -65,7 +64,6 @@ static inline f32 loc2d_r_from_delta_t(f32 delta_t_sec) {
 }
 
 void loc2d_build_tdoa_system(const vec2 mics[4], int ref_idx, const f64 r_unit[3], linSys3 *sys) {
-    printf(str_loc_title, COR2, COR0);
     int row = 0;
     f64 xr = mics[ref_idx].i, yr = mics[ref_idx].j;
     f64 qr = xr*xr + yr*yr;
@@ -81,13 +79,11 @@ void loc2d_build_tdoa_system(const vec2 mics[4], int ref_idx, const f64 r_unit[3
         row++;
     }
     sys->solved = false;
-    lin3_print("Sistema TDOA 3x3", sys);
 }
 
 void loc2d_solve_tdoa(linSys3 *sys, sndLoc2 *loc) {
     lin3_gaussian_solve(sys);
     if (!sys->solved) {
-        //printf(str_loc_invalid, COR3, COR0);
         loc->valid = false;
         return;
     }
@@ -95,9 +91,6 @@ void loc2d_solve_tdoa(linSys3 *sys, sndLoc2 *loc) {
     loc->y     = sys->x[1] ;// * MIC_SCALE_M;
     loc->d_ref = sys->x[2] ;// * MIC_SCALE_M;
     loc->valid = (loc->d_ref >= 0.0);
-    //printf(loc->valid ? str_loc_solved : str_loc_invalid,
-         //  COR2, loc->x, loc->y, loc->d_ref, COR0);
-    printf("%f %f\n", loc->x, loc->y);
 }
 
 void loc2d_print_debug(i2sBuffer *buf) {

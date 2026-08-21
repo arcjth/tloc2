@@ -1,8 +1,7 @@
 {
-  description = "ESP32-WROOM-32 (ESP-IDF) development environment";
+  description = "esp32 dev env";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-esp-dev.url = "github:mirrexagon/nixpkgs-esp-dev/5287d6e1ca9e15ebd5113c41b9590c468e1e001b";
   };
 
@@ -20,7 +19,7 @@
         in
         {
           default = pkgs.mkShell {
-            name = "esp32-wroom-32-dev";
+            name = "esp32devenv";
 
             inputsFrom = [ espShell ];
 
@@ -28,6 +27,7 @@
               picocom
               minicom 
               python3Packages.pyserial
+              python3Packages.rich
               python3Packages.protobuf
             ];
 
