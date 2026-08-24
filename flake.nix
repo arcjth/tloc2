@@ -28,6 +28,7 @@
               minicom 
               python3Packages.pyserial
               python3Packages.rich
+              python3Packages.markdown
               python3Packages.protobuf
             ];
 

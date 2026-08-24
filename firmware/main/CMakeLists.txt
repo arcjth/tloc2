@@ -1,12 +1,10 @@
 idf_component_register(
     SRCS
         "main.c"
-        "jloc2.c"
-        "lib/tcp_debug.c"
-        "lib/esp.c"
-        "lib/jlinear.c"
-        "lib/jthio.c"
-        "lib/potors/snd.c"
+        "loc.c"
+        "server.c"
+        "lib/i2s_esp.c"
+        "lib/math.c"
     INCLUDE_DIRS "."
     REQUIRES
         esp_wifi nvs_flash lwip esp_netif 

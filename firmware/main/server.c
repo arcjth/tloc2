@@ -1,6 +1,5 @@
 #ifdef DEBUG_WIFI
 
-#include "tcp_debug.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_netif.h"
@@ -8,15 +7,15 @@
 #include "nvs_flash.h"
 #include "lwip/sockets.h"
 #include <string.h>
+#include "server.h"
 
-static const char *TAG = "WDBG";
+static const char *TAG = "SRV";
 static volatile int _client_fd = -1;
-
 
 static void _server_task(void *arg) {
     struct sockaddr_in addr = {
         .sin_family      = AF_INET,
-        .sin_port        = htons(DBG_PORT),
+        .sin_port        = htons(SRV_PORT),
         .sin_addr.s_addr = htonl(INADDR_ANY),
     };
 
@@ -25,7 +24,7 @@ static void _server_task(void *arg) {
     setsockopt(srv, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     bind(srv, (struct sockaddr *)&addr, sizeof(addr));
     listen(srv, 1);
-    ESP_LOGI(TAG, "aguardando cliente na porta %d", DBG_PORT);
+    ESP_LOGI(TAG, "aguardando cliente na porta %d", SRV_PORT);
 
     while (1) {
         int fd = accept(srv, NULL, NULL);
@@ -38,12 +37,11 @@ static void _server_task(void *arg) {
             vTaskDelay(pdMS_TO_TICKS(100));
 
         close(fd);
-        ESP_LOGI(TAG, "cliente desconectado, aguardando reconexão");
+        ESP_LOGI(TAG, "cliente desconectado, aguardando reconexao");
     }
 }
 
-
-void wifi_debug_init(void) {
+void server_init(void) {
     nvs_flash_init();
     esp_netif_init();
     esp_event_loop_create_default();
@@ -54,12 +52,12 @@ void wifi_debug_init(void) {
 
     wifi_config_t ap_cfg = {
         .ap = {
-            .ssid            = DBG_SSID,
-            .password        = DBG_PASS,
-            .ssid_len        = strlen(DBG_SSID),
-            .channel         = 11,
-            .authmode        = WIFI_AUTH_WPA2_PSK,
-            .max_connection  = 1,
+            .ssid           = SRV_SSID,
+            .password       = SRV_PASS,
+            .ssid_len       = strlen(SRV_SSID),
+            .channel        = 11,
+            .authmode       = WIFI_AUTH_WPA2_PSK,
+            .max_connection = 1,
         },
     };
 
@@ -67,19 +65,19 @@ void wifi_debug_init(void) {
     esp_wifi_set_config(WIFI_IF_AP, &ap_cfg);
     esp_wifi_start();
 
-    ESP_LOGI(TAG, "AP iniciado: SSID=%s IP=192.168.4.1", DBG_SSID);
+    ESP_LOGI(TAG, "AP iniciado: SSID=%s IP=192.168.4.1", SRV_SSID);
 
-    xTaskCreate(_server_task, "wdbg_srv", 4096, NULL, 5, NULL);
+    xTaskCreate(_server_task, "srv_task", 4096, NULL, 5, NULL);
 }
 
-bool wifi_debug_send(dbg_packet_t *pkt) {
+bool server_send(dbg_packet_t *pkt) {
     int fd = _client_fd;
     if (fd < 0) return false;
 
-    pkt->magic = DBG_MAGIC;
+    pkt->magic = SRV_MAGIC;
     int ret = send(fd, pkt, sizeof(dbg_packet_t), MSG_DONTWAIT);
     if (ret != (int)sizeof(dbg_packet_t)) {
-        _client_fd = -1; 
+        _client_fd = -1;
         return false;
     }
     return true;
