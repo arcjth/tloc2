@@ -10,8 +10,9 @@ void app_main(void) {
     server_init();
 
     while (1) {
-        bool ok    = i2s_start_capture(&buf);
+        bool ok = i2s_start_capture(&buf);
         bool event = loc_detect(&buf);
+        i2s_stop_capture();
 
         sndLoc2 loc = {0};
         if (event) loc_solve(&buf, &loc);

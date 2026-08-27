@@ -37,9 +37,7 @@ dispõe de periféricos I2S dedicados em hardware: os quatro
 microfones foram distribuídos em dois barramentos I2S
 estéreo (dois microfones por barramento, nos canais L e R),
 com o segundo barramento configurado em modo escravo,
-sincronizado ao clock do primeiro (mestre), garantindo a
-leitura simultânea dos quatro canais sobre a mesma base
-de tempo.
+sincronizado ao clock do primeiro (mestre).
 
 A detecção de eventos sonoros é feita por limiar de energia
 (RMS) sobre os quatro canais.
@@ -51,3 +49,13 @@ um dos demais canais para estimar o atraso (lag) entre eles.
 Esse atraso é convertido na diferença de distância (r)
 correspondente, que alimenta o sistema linear descrito
 acima, resultando na posição estimada da fonte sonora.
+As localizações são enviadas para um cliente externo 
+(ex: um computador) para que visualizações 
+avançadas possam ser feitas.
+
+As localizações são calculadas com coerência mínima (retorna localizações nos
+quadrantes corretos), porém mais testes ainda são necessários para aperfeiçoar
+a coerência, escala física, e diminuir a ocasional instabilidade causada pela
+eventual perda de sincronia entre as amostras dos microfones. Otimizações como
+aperfeiçoamento do fluxo de código, otimização do uso de hardware (RAM e flash),
+bem como aperfeiçõar a execução do filtro casado que ainda apresenta-se instável.
