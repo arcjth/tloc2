@@ -22,10 +22,9 @@ CSV_FILE_PATH = "output/logs.csv"
 
 HEADER_STRUCT = struct.Struct("<II10f")
 
-# --- heatmap config ---
-X_MIN, X_MAX = 0.0, 90.0
-Y_MIN, Y_MAX = 0.0, 60.0
-MIC_SPACING = 30.0
+X_MIN, X_MAX = -0.1, 0.1
+Y_MIN, Y_MAX = -0.1, 0.1
+MIC_SPACING = 10.5
 MIC_POSITIONS = [(i * MIC_SPACING, 0.0) for i in range(4)]
 
 HEATMAP_COLS = 70          
@@ -84,7 +83,7 @@ def rgb_to_hex(rgb) -> str:
 class HeatmapVisualizer:
     def __init__(self):
         self.grid = np.zeros((PIXEL_ROWS, HEATMAP_COLS), dtype=np.float64)
-        self.last_point_pixel = None  # (row, col) in grid space, for the marker
+        self.last_point_pixel = None
 
     def _to_grid(self, x, y):
         col = int((x - X_MIN) / (X_MAX - X_MIN) * (HEATMAP_COLS - 1))

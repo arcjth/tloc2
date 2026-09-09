@@ -5,6 +5,9 @@
 #include "lib/i2s_esp.h"
 
 #define XCORR_BUF_LEN (I2S_MAX_SAMPLES - 1)
+#define XCORR_LEN (I2S_MAX_SAMPLES * 2 - 1)
+
+static float v[XCORR_LEN] __attribute__((aligned(16)));
 
 static void _from_channel(const i2sBuffer *buf, int ch, f32 *out) {
     for (int n = 0; n < I2S_MAX_SAMPLES; n++)
@@ -18,23 +21,18 @@ static f32 _rms(const f32 *buffer, int samples) {
 }
 
 static int _matched_lag(const f32 *a, const f32 *b) {
-    int len = I2S_MAX_SAMPLES * 2 - 1;
-    float* v = malloc(len * sizeof(*v));
     dsps_ccorr_f32_ae32((float *)b, I2S_MAX_SAMPLES, (float *)a, I2S_MAX_SAMPLES, v);
-    float lag = 0;
-    float corr = -1;
-    for (int i = 0; i < len; i++) {
-        float x = v[i];
-        if (x > corr) {
-            lag = i - (I2S_MAX_SAMPLES - 1);
-            corr = x;
+
+    int lag = 0;
+    float corr = -1.0f;
+    for (int i = 0; i < XCORR_LEN; i++) {
+        if (v[i] > corr) {
+            corr = v[i];
+            lag = i;
         }
     }
-    free(v);
-    return lag;
-}
-
-bool loc_detect(i2sBuffer *buf) {
+    return lag - (I2S_MAX_SAMPLES - 1);
+}bool loc_detect(i2sBuffer *buf) {
     static f32 ref_buf[I2S_MAX_SAMPLES];
     static f32 cmp_buf[I2S_MAX_SAMPLES];
 

@@ -5,11 +5,11 @@
 #include "lib/math.h"
 
 #define SND_SPEED     343.0f
-#define SND_THRES_AMP 100.0f
-#define PHYS_SCALE    5.0f
+#define SND_THRES_AMP 5.0f
+#define PHYS_SCALE    10.5f
 #define PHYS_UNIT     (PHYS_SCALE * 1.0)
 
-#define XCORR_SHIFT   10
+#define XCORR_SHIFT   8
 #define XCORR_MAX_LAG 80
 
 #define R_FROM_LAG(lag) (SND_SPEED * ((f32)(lag) / I2S_SAMPLE_RATE))

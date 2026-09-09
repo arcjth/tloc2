@@ -1,9 +1,11 @@
 #include "i2s_esp.h"
+#include "esp_timer.h"
 
 static const char *TAG = "TLOC2";
 
 static i2s_chan_handle_t rx0, rx1;
 static i32 tmp[I2S_MAX_SAMPLES * 2];
+static i32 tmp2[I2S_MAX_SAMPLES * 2];
 
 static i2s_chan_handle_t _i2s_create(int port, i2s_role_t role, gpio_num_t ws, gpio_num_t sd) {
     ESP_LOGI(TAG, "creating i2s channel %d (%s), ws=%d sd=%d bclk=%d",
@@ -54,24 +56,39 @@ void i2s_init(void) {
     ESP_ERROR_CHECK(i2s_channel_enable(rx0));
 }
 
+
 bool i2s_start_capture(i2sBuffer *buf) {
-    size_t bytes_read;
+    size_t bytes_read_0, bytes_read_1;
     const size_t read_bytes = I2S_MAX_SAMPLES * 2 * sizeof(i32);
     bool ok = true;
 
-    if (i2s_channel_read(rx0, tmp, read_bytes, &bytes_read, portMAX_DELAY) != ESP_OK) ok = false;
+    if (i2s_channel_read(rx0, tmp, read_bytes, &bytes_read_0, portMAX_DELAY) != ESP_OK) {
+        ok = false;
+    }
+
+    if (i2s_channel_read(rx1, tmp2, read_bytes, &bytes_read_1, portMAX_DELAY) != ESP_OK) {
+        ok = false;
+    }
+
+    if (!ok) {
+        printf("fatal read error\n");
+        return false;
+    }
+
     for (int s = 0; s < I2S_MAX_SAMPLES; s++) {
         buf->samples[s][0] = I2S_CONVERT_SIGNED(tmp[s * 2]);
         buf->samples[s][1] = I2S_CONVERT_SIGNED(tmp[s * 2 + 1]);
+        
+        buf->samples[s][2] = I2S_CONVERT_SIGNED(tmp2[s * 2]);
+        buf->samples[s][3] = I2S_CONVERT_SIGNED(tmp2[s * 2 + 1]);
     }
 
-    if (i2s_channel_read(rx1, tmp, read_bytes, &bytes_read, portMAX_DELAY) != ESP_OK) ok = false;
-    for (int s = 0; s < I2S_MAX_SAMPLES; s++) {
-        buf->samples[s][2] = I2S_CONVERT_SIGNED(tmp[s * 2]);
-        buf->samples[s][3] = I2S_CONVERT_SIGNED(tmp[s * 2 + 1]);
-    }
+    float duration = (float)I2S_MAX_SAMPLES / I2S_SAMPLE_RATE;
+    printf("Captured chunk duration: %f s\n", duration);
+
     return ok;
 }
+
 
 void i2s_stop_capture(void) {
     i2s_channel_disable(rx0);

@@ -14,23 +14,24 @@
 
 #define i32 int
 #define u32 unsigned int
+#define u64 unsigned long
 #define f32 float
 
-/*
 #define PIN_WS  GPIO_NUM_18
 #define PIN_SCK GPIO_NUM_5
 #define PIN_SD0 GPIO_NUM_21
 #define PIN_SD1 GPIO_NUM_19
-*/
+/*
 #define PIN_WS  GPIO_NUM_12
 #define PIN_SCK GPIO_NUM_13
 #define PIN_SD0 GPIO_NUM_2
 #define PIN_SD1 GPIO_NUM_15
+*/
 
 #define I2S_SAMPLE_RATE     48000
 #define I2S_DMA_DESC        8
 #define I2S_DMA_FRAMES      512
-#define I2S_MAX_SAMPLES     1024
+#define I2S_MAX_SAMPLES     512
 #define I2S_CHANNELS        4
 #define LOC_NOREF_CHANNELS  (I2S_CHANNELS - 1)
 

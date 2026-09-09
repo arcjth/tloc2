@@ -11,11 +11,16 @@ void app_main(void) {
 
     while (1) {
         bool ok = i2s_start_capture(&buf);
+        printf("is ok? [ %d ]\n", ok);
+        printf("read\n");
         bool event = loc_detect(&buf);
-        i2s_stop_capture();
+        printf("detected or not\n");
+        // i2s_stop_capture();
+        printf("should stop capture [HERE]\n");
 
         sndLoc2 loc = {0};
         if (event) loc_solve(&buf, &loc);
+        printf("got past solve\n");
 
         pkt.flags = (event ? SRV_FLAG_EVENT : 0)
                   | (loc.valid ? SRV_FLAG_VALID : 0)
@@ -28,7 +33,9 @@ void app_main(void) {
         pkt.loc_x     = (f32)loc.x;
         pkt.loc_y     = (f32)loc.y;
         pkt.loc_d_ref = (f32)loc.d_ref;
+        printf("got packet\n");
 
         server_send(&pkt);
+        printf("sent packet\n");
     }
 }
