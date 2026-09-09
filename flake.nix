@@ -1,8 +1,9 @@
 {
-  description = "esp32 dev env";
+  description = "esp32devenv";
 
   inputs = {
-    nixpkgs-esp-dev.url = "github:mirrexagon/nixpkgs-esp-dev/5287d6e1ca9e15ebd5113c41b9590c468e1e001b";
+    # Unpin from the broken commit and track the repository default
+    nixpkgs-esp-dev.url = "github:mirrexagon/nixpkgs-esp-dev";
   };
 
   outputs = { self, nixpkgs-esp-dev }:
@@ -15,7 +16,8 @@
       devShells = forEachSystem (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          espShell = nixpkgs-esp-dev.devShells.${system}.esp32-idf;
+          # Replace deprecated esp32-idf shell with esp-idf-full (or esp-idf-xtensa)
+          espShell = nixpkgs-esp-dev.devShells.${system}.esp-idf-full;
         in
         {
           default = pkgs.mkShell {
@@ -26,6 +28,7 @@
             buildInputs = with pkgs; [
               picocom
               minicom 
+              python3Packages.matplotlib
               python3Packages.pyserial
               python3Packages.rich
               python3Packages.markdown

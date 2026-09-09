@@ -16,6 +16,12 @@
 #define u32 unsigned int
 #define f32 float
 
+/*
+#define PIN_WS  GPIO_NUM_18
+#define PIN_SCK GPIO_NUM_5
+#define PIN_SD0 GPIO_NUM_21
+#define PIN_SD1 GPIO_NUM_19
+*/
 #define PIN_WS  GPIO_NUM_12
 #define PIN_SCK GPIO_NUM_13
 #define PIN_SD0 GPIO_NUM_2
