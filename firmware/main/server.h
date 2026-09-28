@@ -10,10 +10,10 @@
 #define u32 unsigned int
 #define f32 float
 
-#define SRV_PORT  3333
-#define SRV_SSID  "TLOC2_JZZTHU"
-#define SRV_PASS  "tloc2debug"
-#define SRV_MAGIC 0xBEEF1234
+#define SRV_PORT   3333
+#define SRV_SSID   "TLOC2_JZZTHU"
+#define SRV_PASS   "tloc2debug"
+#define SRV_MAGIC  0xBEEF1234
 
 #define SRV_FLAG_EVENT (1u << 0)
 #define SRV_FLAG_VALID (1u << 1)
