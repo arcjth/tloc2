@@ -11,17 +11,10 @@ sdkconfig
 sdkconfig.old
 .cache
 
-
 *.jar
 *.war
 *.ear
 *.nar
-
-
-
-
-# For PCBs designed using KiCad: https://www.kicad.org/
-# Format documentation: https://kicad.org/help/file-formats/
 
 *.000
 *.bak
@@ -41,21 +34,18 @@ _autosave-*
 *-save.kicad_pcb
 fp-info-cache
 ~*.lck
+*.history
 \#auto_saved_files#
 
-# Netlist files (exported from Eeschema)
 *.net
 
-# Autorouter files (exported from Pcbnew)
 *.dsn
 *.ses
 
-# Exported BOM files
 *.xml
 *.csv
 
-# Archived Backups (KiCad 6.0)
-**/*-backups/*.zip
+*-backups
+*.zip
 
-# Local project settings
 *.kicad_prl
