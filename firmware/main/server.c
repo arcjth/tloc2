@@ -9,8 +9,10 @@
 #include <string.h>
 #include "server.h"
 
-static const char *TAG = "SRV";
-static volatile int _client_fd = -1;
+static const char *TAG = "SRV_UDP";
+static volatile int _srv_fd = -1;
+static struct sockaddr_in _client_addr;
+static volatile bool _client_connected = false;
 
 static void _server_task(void *arg) {
     struct sockaddr_in addr = {
@@ -19,25 +21,32 @@ static void _server_task(void *arg) {
         .sin_addr.s_addr = htonl(INADDR_ANY),
     };
 
-    int srv = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-    int opt = 1;
-    setsockopt(srv, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    int srv = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (srv < 0) {
+        ESP_LOGE(TAG, "Failed to create UDP socket");
+        vTaskDelete(NULL);
+        return;
+    }
+
     bind(srv, (struct sockaddr *)&addr, sizeof(addr));
-    listen(srv, 1);
-    ESP_LOGI(TAG, "aguardando cliente na porta %d", SRV_PORT);
+    _srv_fd = srv;
+    ESP_LOGI(TAG, "Listening for UDP PING on port %d", SRV_PORT);
 
+    char rx_buf[32];
     while (1) {
-        int fd = accept(srv, NULL, NULL);
-        if (fd < 0) { vTaskDelay(pdMS_TO_TICKS(500)); continue; }
+        struct sockaddr_in source_addr;
+        socklen_t socklen = sizeof(source_addr);
+        
+        // Block until receiving a registration "PING" datagram from Python client
+        int len = recvfrom(srv, rx_buf, sizeof(rx_buf) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
 
-        ESP_LOGI(TAG, "cliente conectado");
-        _client_fd = fd;
-
-        while (_client_fd >= 0)
-            vTaskDelay(pdMS_TO_TICKS(100));
-
-        close(fd);
-        ESP_LOGI(TAG, "cliente desconectado, aguardando reconexao");
+        if (len > 0) {
+            _client_addr = source_addr;
+            _client_connected = true;
+            ESP_LOGI(TAG, "Client connected via UDP. Starting data stream.");
+        }
+        
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
@@ -65,22 +74,18 @@ void server_init(void) {
     esp_wifi_set_config(WIFI_IF_AP, &ap_cfg);
     esp_wifi_start();
 
-    ESP_LOGI(TAG, "AP iniciado: SSID=%s IP=192.168.4.1", SRV_SSID);
+    ESP_LOGI(TAG, "AP Started: SSID=%s IP=192.168.4.1", SRV_SSID);
 
     xTaskCreate(_server_task, "srv_task", 4096, NULL, 5, NULL);
 }
 
 bool server_send(dbg_packet_t *pkt) {
-    int fd = _client_fd;
-    if (fd < 0) return false;
+    if (!_client_connected || _srv_fd < 0) return false;
 
     pkt->magic = SRV_MAGIC;
-    int ret = send(fd, pkt, sizeof(dbg_packet_t), MSG_DONTWAIT);
-    if (ret != (int)sizeof(dbg_packet_t)) {
-        _client_fd = -1;
-        return false;
-    }
-    return true;
+    int ret = sendto(_srv_fd, pkt, sizeof(dbg_packet_t), MSG_DONTWAIT, (struct sockaddr *)&_client_addr, sizeof(_client_addr));
+    
+    return (ret == (int)sizeof(dbg_packet_t));
 }
 
 #endif
