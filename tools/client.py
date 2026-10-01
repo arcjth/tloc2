@@ -12,7 +12,6 @@ from rich.layout import Layout
 from rich.panel import Panel
 from rich.text import Text
 
-# --- network / protocol config ---
 ESP32_IP = "192.168.4.1"
 DBG_PORT = 3333
 DBG_MAGIC = 0xBEEF1234
@@ -23,16 +22,16 @@ PACKET_SIZE = HEADER_STRUCT.size
 WRITE_TO_CSV = True
 CSV_FILE_PATH = "output/logs.csv"
 
-X_MIN, X_MAX = -0.1, 0.1
-Y_MIN, Y_MAX = -0.1, 0.1
-MIC_SPACING = 10.5
+X_MIN, X_MAX = -0.3, 0.3
+Y_MIN, Y_MAX = -0.3, 0.3
+MIC_SPACING = 4.8
 MIC_POSITIONS = [(i * MIC_SPACING, 0.0) for i in range(4)]
 
 HEATMAP_COLS = 70
 HEATMAP_ROWS = 24
 PIXEL_ROWS = HEATMAP_ROWS * 2
 GAUSSIAN_SIGMA = 1.5
-DECAY_RATE = 0.95
+DECAY_RATE = 0.5
 
 logs = deque(maxlen=15)
 coord_history = deque(maxlen=20)
